@@ -1,112 +1,179 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import React, { useMemo, useState } from "react";
+import { View, Text, Pressable, StyleSheet, Platform, Linking, ScrollView } from "react-native";
+import { MaterialIcons } from "@expo/vector-icons";
 
-import { Collapsible } from '@/components/ui/collapsible';
-import { ExternalLink } from '@/components/external-link';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Fonts } from '@/constants/theme';
+type SectionProps = {
+  title: string;
+  children: React.ReactNode;
+};
 
-export default function TabTwoScreen() {
+function Section({ title, children }: SectionProps) {
+  const [open, setOpen] = useState(false);
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#D0D0D0', dark: '#353636' }}
-      headerImage={
-        <IconSymbol
-          size={310}
-          color="#808080"
-          name="chevron.left.forwardslash.chevron.right"
-          style={styles.headerImage}
+    <View style={styles.section}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityState={{ expanded: open }}
+        onPress={() => setOpen((v) => !v)}
+        style={styles.sectionHeader}
+      >
+        <Text style={styles.sectionTitle}>{title}</Text>
+        <MaterialIcons name={open ? "expand-less" : "expand-more"} size={22} />
+      </Pressable>
+
+      {open ? <View style={styles.sectionBody}>{children}</View> : null}
+    </View>
+  );
+}
+
+function LinkText({ href, label }: { href: string; label: string }) {
+  const canOpen = useMemo(() => typeof href === "string" && href.length > 0, [href]);
+
+  return (
+    <Pressable
+      accessibilityRole="link"
+      disabled={!canOpen}
+      onPress={async () => {
+        try {
+          const supported = await Linking.canOpenURL(href);
+          if (!supported) return;
+          await Linking.openURL(href);
+        } catch {
+          // swallow: avoid crashing UI on restricted environments
+        }
+      }}
+      style={styles.linkButton}
+    >
+      <Text style={styles.linkText}>{label}</Text>
+      <MaterialIcons name="open-in-new" size={16} />
+    </Pressable>
+  );
+}
+
+export default function ExploreScreen() {
+  return (
+    <ScrollView contentContainerStyle={styles.container}>
+      <View style={styles.header}>
+        <MaterialIcons name="code" size={96} style={styles.headerIcon} />
+        <Text style={styles.title}>Explore</Text>
+        <Text style={styles.subtitle}>This screen documents the starter routing + platform tips.</Text>
+      </View>
+
+      <Section title="File-based routing">
+        <Text style={styles.p}>
+          This app uses Expo Router. Tabs live under <Text style={styles.bold}>app/(tabs)</Text>.
+        </Text>
+        <Text style={styles.p}>
+          Home: <Text style={styles.mono}>app/(tabs)/index.tsx</Text>
+        </Text>
+        <Text style={styles.p}>
+          Explore: <Text style={styles.mono}>app/(tabs)/explore.tsx</Text>
+        </Text>
+        <Text style={styles.p}>
+          The tab navigator is defined in <Text style={styles.mono}>app/(tabs)/_layout.tsx</Text>.
+        </Text>
+        <LinkText href="https://docs.expo.dev/router/introduction/" label="Expo Router docs" />
+      </Section>
+
+      <Section title="Android, iOS, and web support">
+        <Text style={styles.p}>
+          You can run this project on Android, iOS, and web. For web, run{" "}
+          <Text style={styles.mono}>npx expo start --web</Text>.
+        </Text>
+      </Section>
+
+      <Section title="Images">
+        <Text style={styles.p}>
+          For static images, include <Text style={styles.bold}>@2x</Text> and <Text style={styles.bold}>@3x</Text>{" "}
+          variants for different screen densities.
+        </Text>
+        <LinkText href="https://reactnative.dev/docs/images" label="React Native Images docs" />
+      </Section>
+
+      <Section title="Light and dark mode">
+        <Text style={styles.p}>
+          Use <Text style={styles.mono}>useColorScheme()</Text> to detect the user’s theme and adjust colors.
+        </Text>
+        <LinkText
+          href="https://docs.expo.dev/develop/user-interface/color-themes/"
+          label="Expo color themes guide"
         />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText
-          type="title"
-          style={{
-            fontFamily: Fonts.rounded,
-          }}>
-          Explore
-        </ThemedText>
-      </ThemedView>
-      <ThemedText>This app includes example code to help you get started.</ThemedText>
-      <Collapsible title="File-based routing">
-        <ThemedText>
-          This app has two screens:{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/explore.tsx</ThemedText>
-        </ThemedText>
-        <ThemedText>
-          The layout file in <ThemedText type="defaultSemiBold">app/(tabs)/_layout.tsx</ThemedText>{' '}
-          sets up the tab navigator.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/router/introduction">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Android, iOS, and web support">
-        <ThemedText>
-          You can open this project on Android, iOS, and the web. To open the web version, press{' '}
-          <ThemedText type="defaultSemiBold">w</ThemedText> in the terminal running this project.
-        </ThemedText>
-      </Collapsible>
-      <Collapsible title="Images">
-        <ThemedText>
-          For static images, you can use the <ThemedText type="defaultSemiBold">@2x</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">@3x</ThemedText> suffixes to provide files for
-          different screen densities
-        </ThemedText>
-        <Image
-          source={require('@/assets/images/react-logo.png')}
-          style={{ width: 100, height: 100, alignSelf: 'center' }}
-        />
-        <ExternalLink href="https://reactnative.dev/docs/images">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Light and dark mode components">
-        <ThemedText>
-          This template has light and dark mode support. The{' '}
-          <ThemedText type="defaultSemiBold">useColorScheme()</ThemedText> hook lets you inspect
-          what the user&apos;s current color scheme is, and so you can adjust UI colors accordingly.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/develop/user-interface/color-themes/">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Animations">
-        <ThemedText>
-          This template includes an example of an animated component. The{' '}
-          <ThemedText type="defaultSemiBold">components/HelloWave.tsx</ThemedText> component uses
-          the powerful{' '}
-          <ThemedText type="defaultSemiBold" style={{ fontFamily: Fonts.mono }}>
-            react-native-reanimated
-          </ThemedText>{' '}
-          library to create a waving hand animation.
-        </ThemedText>
-        {Platform.select({
-          ios: (
-            <ThemedText>
-              The <ThemedText type="defaultSemiBold">components/ParallaxScrollView.tsx</ThemedText>{' '}
-              component provides a parallax effect for the header image.
-            </ThemedText>
-          ),
-        })}
-      </Collapsible>
-    </ParallaxScrollView>
+      </Section>
+
+      <Section title="Animations">
+        <Text style={styles.p}>
+          For high-performance animations, use <Text style={styles.bold}>react-native-reanimated</Text>.
+        </Text>
+        {Platform.OS === "ios" ? (
+          <Text style={styles.p}>
+            iOS often benefits from native-feeling transitions; keep animations subtle and avoid blocking JS.
+          </Text>
+        ) : null}
+      </Section>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  headerImage: {
-    color: '#808080',
-    bottom: -90,
-    left: -35,
-    position: 'absolute',
+  container: {
+    padding: 20,
+    paddingBottom: 40
   },
-  titleContainer: {
-    flexDirection: 'row',
-    gap: 8,
+  header: {
+    marginBottom: 16
   },
+  headerIcon: {
+    alignSelf: "center"
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "700",
+    textAlign: "center",
+    marginTop: 8
+  },
+  subtitle: {
+    textAlign: "center",
+    marginTop: 6,
+    opacity: 0.8
+  },
+  section: {
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: 12,
+    padding: 12,
+    marginTop: 12
+  },
+  sectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between"
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: "700"
+  },
+  sectionBody: {
+    marginTop: 10
+  },
+  p: {
+    marginBottom: 8,
+    lineHeight: 20
+  },
+  bold: {
+    fontWeight: "700"
+  },
+  mono: {
+    fontFamily: Platform.select({ ios: "Menlo", android: "monospace", default: "monospace" }),
+    fontSize: 13
+  },
+  linkButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingVertical: 6
+  },
+  linkText: {
+    fontWeight: "700",
+    textDecorationLine: "underline"
+  }
 });
