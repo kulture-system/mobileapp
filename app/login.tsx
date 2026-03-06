@@ -23,19 +23,22 @@ export default function LoginScreen() {
 
     setIsLoading(true);
     try {
-      const res = await fetch(`${API_BASE_URL}/api/mobile/auth/request-otp`, {
+      const url = `${API_BASE_URL}/api/mobile/auth/request-otp`;
+      console.log(`[Login] POST ${url}`);
+      const res = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: email.trim() }),
       });
-
-      const data = await res.json();
+      console.log(`[Login] request-otp ← ${res.status}`);
+      const data = await res.json() as any;
+      console.log(`[Login] request-otp body:`, JSON.stringify(data));
 
       if (!res.ok) {
         throw new Error(data.error || "Failed to request OTP");
       }
 
-      // Move to next step regardless to prevent email enumeration visually
+      // Only advance to OTP entry if the server confirmed the email was found
       setStep("OTP");
     } catch (error: any) {
       Alert.alert("Error", error.message);
@@ -52,13 +55,16 @@ export default function LoginScreen() {
 
     setIsLoading(true);
     try {
-      const res = await fetch(`${API_BASE_URL}/api/mobile/auth/verify-otp`, {
+      const url = `${API_BASE_URL}/api/mobile/auth/verify-otp`;
+      console.log(`[Login] POST ${url}`);
+      const res = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: email.trim(), code: otpCode.trim() }),
       });
+      console.log(`[Login] verify-otp ← ${res.status}`);
 
-      const data = await res.json();
+      const data = await res.json() as any;
 
       if (!res.ok) {
         throw new Error(data.error || "Invalid verification code");

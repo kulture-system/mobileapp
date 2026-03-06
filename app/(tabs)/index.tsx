@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "expo-router";
 import { fetchWithAuth } from "../../lib/api";
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { getSocket, joinStaffRoom } from '../../lib/socket';
 
 type FilterType = 'All' | 'Today' | 'Upcoming' | 'Completed';
 
@@ -23,6 +24,29 @@ export default function HomeTab() {
 
   const router = useRouter();
 
+  // ── Real-time socket listener ──────────────────────────────────────────
+  // Await joinStaffRoom() (which calls initSocket) before attaching the
+  // listener so getSocket() is guaranteed non-null when we use it.
+  useEffect(() => {
+    let active = true;
+    const handler = () => {
+      if (!active) return;
+      console.log('[Socket.IO] shift:ended received — refreshing tasks');
+      loadTasks(true, 0);
+    };
+    (async () => {
+      await joinStaffRoom();      // authenticates & connects the socket
+      const socket = getSocket();
+      if (!socket || !active) return;
+      socket.on('shift:ended', handler);
+    })();
+    return () => {
+      active = false;
+      getSocket()?.off('shift:ended', handler);
+    };
+  }, []);
+  // ──────────────────────────────────────────────────────────────────────────
+
   const loadTasks = async (isRefresh = false, currentStart = 0) => {
     try {
       if (isRefresh) {
@@ -34,7 +58,7 @@ export default function HomeTab() {
       }
 
       // We ask the backend for the paginated slice
-      const res = await fetchWithAuth(`/api/mobile/tasks?start=${currentStart}&length=${LENGTH}${isRefresh ? '&refresh=true' : ''}`);
+      const res = await fetchWithAuth(`/api/mobile/tasks?start=${currentStart}&length=${LENGTH}`);
       const json = (await res.json()) as any;
 
       if (json.success && json.data) {

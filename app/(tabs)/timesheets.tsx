@@ -3,6 +3,7 @@ import { Stack, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { fetchWithAuth } from "../../lib/api";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { getSocket, joinStaffRoom } from '../../lib/socket';
 
 export default function TimesheetsScreen() {
     const [timesheets, setTimesheets] = useState<any[]>([]);
@@ -63,6 +64,31 @@ export default function TimesheetsScreen() {
     useEffect(() => {
         fetchAllData(false, 0);
     }, []);
+
+    // ── Real-time socket listener ────────────────────────────────────────
+    useEffect(() => {
+        let active = true;
+        const handler = () => {
+            if (!active) return;
+            console.log('[Socket.IO] shift:ended received — refreshing timesheets');
+            setStartIdx(0);
+            setHasMore(true);
+            fetchAllData(true, 0);
+        };
+        (async () => {
+            await joinStaffRoom();        // ensures socket is authenticated & connected
+            const socket = getSocket();
+            if (!socket || !active) return;
+            socket.on('shift:ended', handler);
+        })();
+        return () => {
+            active = false;
+            const socket = getSocket();
+            socket?.off('shift:ended', handler);
+        };
+    }, []);
+    // ────────────────────────────────────────────────────────────────────
+
 
     const onRefresh = () => {
         setHasMore(true);

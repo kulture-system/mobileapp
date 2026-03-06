@@ -58,6 +58,13 @@ const config = {
   ios: {
     supportsTablet: true,
     bundleIdentifier: "com.anonymous.mobileapp",
+    infoPlist: {
+      // Allow all HTTP/HTTPS traffic during development and to Render.com
+      // (iOS App Transport Security would otherwise block non-HTTPS or untrusted certs)
+      NSAppTransportSecurity: {
+        NSAllowsArbitraryLoads: true,
+      },
+    },
   },
 
   android: {

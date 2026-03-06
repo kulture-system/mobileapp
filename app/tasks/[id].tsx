@@ -1,5 +1,5 @@
 import { View, Text, ScrollView, ActivityIndicator, TouchableOpacity, Alert, RefreshControl, Modal } from "react-native";
-import { useLocalSearchParams, useRouter, Stack } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState, useRef } from "react";
 import { fetchWithAuth } from "../../lib/api";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -198,7 +198,7 @@ export default function TaskDetailScreen() {
     const targetLng = lngField?.value ? parseFloat(lngField.value) : null;
     const hasCoordinates = targetLat !== null && !isNaN(targetLat) && targetLng !== null && !isNaN(targetLng);
     const radiusField = customFields.find((f: any) => f.label?.toLowerCase().includes("radius"));
-    const allowedRadius = radiusField && !isNaN(parseFloat(radiusField.value)) ? parseFloat(radiusField.value) : 20;
+    const allowedRadius = radiusField && !isNaN(parseFloat(radiusField.value)) ? parseFloat(radiusField.value) : 50;
 
     const addressField = customFields.find((f: any) => f.label?.toLowerCase().includes("address"));
     const cityField = customFields.find((f: any) => f.label?.toLowerCase().includes("city"));
@@ -213,7 +213,6 @@ export default function TaskDetailScreen() {
 
     return (
         <View style={{ flex: 1, backgroundColor: '#F9FAFB' }}>
-            <Stack.Screen options={{ title: task?.name || "Shift Details" }} />
 
             <ScrollView
                 contentContainerStyle={{ padding: 24, paddingBottom: 60 }}
